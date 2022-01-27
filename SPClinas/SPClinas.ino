@@ -4,6 +4,7 @@
   Reporting date : 22.01.24
   Update date : 22.01.27
   written by Smartcube HW Staff 'HEONSEOK HA'
+  ~~~~
 */
 
 const int relay[12] = {30,31,32,33,34,35,36,37,38,39,40,41};  //Arduino Digital Pin
