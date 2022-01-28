@@ -2,18 +2,21 @@
   Project Name : SPC Linas Unmanned Pickup Box
   Subtitle : SPClinas
   Reporting date : 22.01.24
-  Update date : 22.01.27
+  Update date : 22.01.28
   written by Smartcube HW Staff 'HEONSEOK HA'
 */
 
 const int relay[12] = {30,31,32,33,34,35,36,37,38,39,40,41};  //Arduino Digital Pin
-
 int t = 750; // t[ms] = (Blink Cycle)/2
-int ref = 1;  // ref = ('1' before refresh() ; '0' after refresh())
+int ref[12] = {0};
+/*
+  ref[i] = 0 : COM to NC(Relay OFF)
+  ref[i] = 1 : COM to NO(Relay ON(Blink))
+*/
 
 void setup()
 {
-  for(int i=0; i<12; i++)
+  for(int i = 0; i < 12 ; i++)
   {
     pinMode(relay[i], OUTPUT);
     digitalWrite(relay[i], LOW);  //Relay type : COM to NC
@@ -43,220 +46,195 @@ void wait(unsigned long duration_ms)
   }
 }
 
-void refresh()
+void off_1()
 {
-  for(int i=0; i<12; i++)
-  {
-    if(digitalRead(relay[i]) == HIGH)
-    {
-      digitalWrite(relay[i], LOW);
-    }
-  }
-  
-  ref = 0;
+  digitalWrite(relay[0], LOW);
+  ref[0] = 0;
 }
 
-void relay1on()
+void off_2()
 {
-  while(ref != 0)
-  {
-    digitalWrite(relay[0], HIGH);
-    wait(t);
-    digitalWrite(relay[0], LOW);
-    wait(t);    
-  }
-  ref = 1;
+  digitalWrite(relay[1], LOW);
+  ref[1] = 0;
 }
 
-void relay2on()
+void off_3()
 {
-  while(ref != 0)
-  {
-    digitalWrite(relay[1], HIGH);
-    wait(t);
-    digitalWrite(relay[1], LOW);
-    wait(t);    
-  }
-  ref = 1;
+  digitalWrite(relay[2], LOW);
+  ref[2] = 0;
 }
 
-void relay3on()
+void off_4()
 {
-  while(ref != 0)
-  {
-    digitalWrite(relay[2], HIGH);
-    wait(t);
-    digitalWrite(relay[2], LOW);
-    wait(t);    
-  }
-  ref = 1;
+  digitalWrite(relay[3], LOW);
+  ref[3] = 0;
 }
 
-void relay4on()
+void off_5()
 {
-  while(ref != 0)
-  {
-    digitalWrite(relay[3], HIGH);
-    wait(t);
-    digitalWrite(relay[3], LOW);
-    wait(t);    
-  }
-  ref = 1;
+  digitalWrite(relay[4], LOW);
+  ref[4] = 0;
 }
 
-void relay5on()
+void off_6()
 {
-  while(ref != 0)
-  {
-    digitalWrite(relay[4], HIGH);
-    wait(t);
-    digitalWrite(relay[4], LOW);
-    wait(t);    
-  }
-  ref = 1;
+  digitalWrite(relay[5], LOW);
+  ref[5] = 0;
 }
 
-void relay6on()
+void off_7()
 {
-  while(ref != 0)
-  {
-    digitalWrite(relay[5], HIGH);
-    wait(t);
-    digitalWrite(relay[5], LOW);
-    wait(t);    
-  }
-  ref = 1;
+  digitalWrite(relay[6], LOW);
+  ref[6] = 0;
 }
 
-void relay7on()
+void off_8()
 {
-  while(ref != 0)
-  {
-    digitalWrite(relay[6], HIGH);
-    wait(t);
-    digitalWrite(relay[6], LOW);
-    wait(t);    
-  }
-  ref = 1;
+  digitalWrite(relay[7], LOW);
+  ref[7] = 0;
 }
 
-void relay8on()
+void off_9()
 {
-  while(ref != 0)
-  {
-    digitalWrite(relay[7], HIGH);
-    wait(t);
-    digitalWrite(relay[7], LOW);
-    wait(t);    
-  }
-  ref = 1;
+  digitalWrite(relay[8], LOW);
+  ref[8] = 0;
 }
 
-void relay9on()
+void off_10()
 {
-  while(ref != 0)
-  {
-    digitalWrite(relay[8], HIGH);
-    wait(t);
-    digitalWrite(relay[8], LOW);
-    wait(t);    
-  }
-  ref = 1;
+  digitalWrite(relay[9], LOW);
+  ref[9] = 0;
 }
 
-void relay10on()
+void off_11()
 {
-  while(ref != 0)
-  {
-    digitalWrite(relay[9], HIGH);
-    wait(t);
-    digitalWrite(relay[9], LOW);
-    wait(t);    
-  }
-  ref = 1;
+  digitalWrite(relay[10], LOW);
+  ref[10] = 0;
 }
 
-void relay11on()
+void off_12()
 {
-  while(ref != 0)
-  {
-    digitalWrite(relay[10], HIGH);
-    wait(t);
-    digitalWrite(relay[10], LOW);
-    wait(t);    
-  }
-  ref = 1;
-}
-
-void relay12on()
-{
-  while(ref != 0)
-  {
-    digitalWrite(relay[11], HIGH);
-    wait(t);
-    digitalWrite(relay[11], LOW);
-    wait(t);    
-  }
-  ref = 1;
+  digitalWrite(relay[11], LOW);
+  ref[11] = 0;
 }
 
 void brocker(char req)
 {
   if (req == 'A')
   {
-    relay1on();
+    ref[0] = 1;
   }
   else if (req == 'B')
   {
-    relay2on();
+    ref[1] = 1;
   }
   else if (req == 'C')
   {
-    relay3on();
+    ref[2] = 1;
   }
   else if (req == 'D')
   {
-    relay4on();
+    ref[3] = 1;
   }
   else if (req == 'E')
   {
-    relay5on();
+    ref[4] = 1;
   }
   else if (req == 'F')
   {
-    relay6on();
+    ref[5] = 1;
   }
   else if (req == 'G')
   {
-    relay7on();
+    ref[6] = 1;
   }
   else if (req == 'H')
   {
-    relay8on();
+    ref[7] = 1;
   }
   else if (req == 'I')
   {
-    relay9on();
+    ref[8] = 1;
   }
   else if (req == 'J')
   {
-    relay10on();
+    ref[9] = 1;
   }
   else if (req == 'K')
   {
-    relay11on();
+    ref[10] = 1;
   }
   else if (req == 'L')
   {
-    relay12on();
+    ref[11] = 1;
   }
-  else if (req == 'Z')
+  else if (req == 'a')
   {
-    refresh();
+    off_1();
+  }
+  else if (req == 'b')
+  {
+    off_2();
+  }
+  else if (req == 'c')
+  {
+    off_3();
+  }
+  else if (req == 'd')
+  {
+    off_4();
+  }
+  else if (req == 'e')
+  {
+    off_5();
+  }
+  else if (req == 'f')
+  {
+    off_6();
+  }
+  else if (req == 'g')
+  {
+    off_7();
+  }
+  else if (req == 'h')
+  {
+    off_8();
+  }
+  else if (req == 'i')
+  {
+    off_9();
+  }
+  else if (req == 'j')
+  {
+    off_10();
+  }
+  else if (req == 'k')
+  {
+    off_11();
+  }
+  else if (req == 'l')
+  {
+    off_12();
   }
 }
 
 void loop() {
   char req = Serial.read();
   brocker(req);
+  for(int i = 0 ; i < 12 ; i++)
+  {
+    if(ref[i] == 1)
+    {
+      digitalWrite(relay[i], HIGH);
+    }
+  }
+  wait(t);
+  for(int i = 0 ; i < 12 ; i++)
+  {
+    if(ref[i] == 1)
+    {
+      digitalWrite(relay[i], LOW);
+    }
+  }
+  wait(t);
 }
