@@ -1,18 +1,25 @@
-/*  ### 스마트폰 app으로 ESP8266 Wifi 모듈 회로의 Relay ON·OFF ###
- *  1. 환경 : WAN - 공유기1 - COM1
- *  2. 앱화면의 버튼을 눌러 Relay를 ON·OFF 할 수 있다.(PIN_RELAY1(D1 LED), PIN_RELAY2(D5 LED), PIN_RELAY3(D9 LED), PIN_RELAY4(D11 LED))
- *  3. 미니 전원을 연결하여 소형화 된 무선 WiFi 모듈을 구성해본다.
- *    http://server_ip/pin_relay1/0 이면 PIN_RELAY1(D1 LED) 를 LOW로 설정,
- *    http://server_ip/pin_relay1/1 이면 PIN_RELAY1(D1 LED) 를 HIGH로 설정,
- *    http://server_ip/pin_relay2/0 이면 PIN_RELAY2(D5 LED) 를 LOW로 설정,
- *    http://server_ip/pin_relay2/1 이면 PIN_RELAY2(D5 LED) 를 HIGH로 설정,
- *    http://server_ip/pin_relay3/0 이면 PIN_RELAY3(D9 LED) 를 LOW로 설정,
- *    http://server_ip/pin_relay3/1 이면 PIN_RELAY3(D9 LED) 를 HIGH로 설정,
- *    http://server_ip/pin_relay4/0 이면 PIN_RELAY4(D11 LED) 를 LOW로 설정,
- *    http://server_ip/pin_relay4/1 이면 PIN_RELAY4(D11 LED) 를 HIGH로 설정
- *  4. 내부망에서 동작 가능하다.
- *  5. 외부망에서 동작은 공유기1의 포트포워딩 설정 후 가능하다.   
- */
+/*  
+  Project Name : BOX25_Internal_Type
+  Subtitle : Control of ON/OFF of relay 4channel using ESP8266 Wifi module in smartphone app
+  Reporting date : 22.01.28
+  Update date : 22.02.03
+  written by Smartcube HW Staff 'HEONSEOK HA'
+
+  1. 시스템 구성 : WAN - 공유기1 - COM1(ESP8266 Wifi module)
+  2. 앱화면의 버튼을 눌러 Relay를 ON·OFF 할 수 있다.
+  (PIN_RELAY1(D1 LED), PIN_RELAY2(D5 LED), PIN_RELAY3(D9 LED), PIN_RELAY4(D11 LED))
+  3. 미니 전원을 연결하여 소형화 된 무선 WiFi 모듈을 구성해본다.
+  http://server_ip/pin_relay1/0 이면 PIN_RELAY1(D1 LED) 를 LOW로 설정,
+  http://server_ip/pin_relay1/1 이면 PIN_RELAY1(D1 LED) 를 HIGH로 설정,
+  http://server_ip/pin_relay2/0 이면 PIN_RELAY2(D5 LED) 를 LOW로 설정,
+  http://server_ip/pin_relay2/1 이면 PIN_RELAY2(D5 LED) 를 HIGH로 설정,
+  http://server_ip/pin_relay3/0 이면 PIN_RELAY3(D9 LED) 를 LOW로 설정,
+  http://server_ip/pin_relay3/1 이면 PIN_RELAY3(D9 LED) 를 HIGH로 설정,
+  http://server_ip/pin_relay4/0 이면 PIN_RELAY4(D11 LED) 를 LOW로 설정,
+  http://server_ip/pin_relay4/1 이면 PIN_RELAY4(D11 LED) 를 HIGH로 설정
+  4. 내부망에서 동작 가능하다.
+  5. 외부망에서 동작은 공유기1의 포트포워딩 설정 후 가능하다.   
+*/
 
 #include <ESP8266WiFi.h>
 
