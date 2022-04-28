@@ -43,8 +43,8 @@ int EMval = 0;  // EMval = 0 : LOW(connect), EMval = HIGH(disconnect)
 float h = 0;  //humidity value
 float t = 0;  //temperature value
 
-const char* ssid = "sclab_3F_2.4GHz";     // 공유기(AP) 접속 ID
-const char* password = "emCMjbM8YjdCpdz"; // 공유기(AP) 접속 패스워드
+const char* ssid = "";     // 공유기(AP) 접속 ID
+const char* password = ""; // 공유기(AP) 접속 패스워드
 
 // 서버 인스턴스 생성 (80번 포트 지정)
 WiFiServer server(80);
