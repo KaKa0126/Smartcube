@@ -33,8 +33,8 @@ WiFiServer server(80);
 // 각각의 Relay 상태(ON·OFF) 변수 설정(ON = 1, OFF = 0)
 int R1val = 0;  // EM Lock
 
-const char* ssid = "sclab_3F";     // 공유기(AP) 접속 ID
-const char* password = "cube5820!@"; // 공유기(AP) 접속 패스워드
+const char* ssid = "";     // 공유기(AP) 접속 ID
+const char* password = ""; // 공유기(AP) 접속 패스워드
 
 void setup() {
   Serial.begin(115200);
