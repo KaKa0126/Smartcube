@@ -2,7 +2,7 @@
   Project Name : Storhub_Access_control_system
   Subtitle : Storhub
   Reporting date : 22.11.08
-  Update date : 22.11.08
+  Update date : 23.09.06
   written by Smartcube HW Staff 'HEONSEOK HA'
 */
 
@@ -49,13 +49,12 @@ byte RecPacket[11]={0, }, SenPacket_switch[11]={0, }, SenPacket_screen[11]={0, }
  * 화면2 : 2
  * 화면3 : 3
  * 화면4 : 4
+ * 화면4-2 : 4
  * 화면5 : 5
  * 화면6 : 6
  */
 
-//switch1 : 눌리지 않은 상태(기본 상태)에서 '1', 눌린 상태에서 '0' 출력
-//switch_cnt : default 값 : 0 ; 스위치가 눌려, SendPacket() 함수를 실행하면 1
-int key=0, SerFlag=0, ScreenFlag = 0, pwlength = 0, switch1 = 1, switch_cnt = 0;
+int key=0, SerFlag=0, ScreenFlag = 0, pwlength = 0, check_process = 0;
 
 //프로토콜 변수
 byte stx, addr, cmd, receive_data1, receive_data2, receive_data3, receive_data4, receive_data5, receive_data6, send_data1, send_data2, send_data3, send_data4, send_data5, send_data6, etx, sum;
@@ -70,6 +69,7 @@ byte stx, addr, cmd, receive_data1, receive_data2, receive_data3, receive_data4,
      * wait_1 : 초기화면 시, 사용
      * wait_2 : 초기화면이 아닐 때, 사용
 */
+char user_name1, user_name2, user_name3, user_name4, user_name5, user_name6;
 
 void wait_1(unsigned long duration_ms)
 {
@@ -78,16 +78,7 @@ void wait_1(unsigned long duration_ms)
   bool is_complete = false;
   while (!is_complete)
   {
-    //스위치 상태 응답
-    if(switch1 == 0 && switch_cnt == 0){
-      SendPacket_switch();
-      switch_cnt += 1;
-    }
-    else if(switch1 == 1 && switch_cnt == 1){
-      switch_cnt -= 1;
-    }
-    
-    RecievePacket();
+    RecievePacket();    
     if(SerFlag == 1){
       break;
     }
@@ -108,16 +99,7 @@ void wait_2(unsigned long duration_ms)
   unsigned long time_end = time_start;
   bool is_complete = false;
   while (!is_complete)
-  {
-    //스위치 상태 응답
-    if(switch1 == 0 && switch_cnt == 0){
-      SendPacket_switch();
-      switch_cnt += 1;
-    }
-    else if(switch1 == 1 && switch_cnt == 1){
-      switch_cnt -= 1;
-    }
-    
+  {    
     RecievePacket();
     
     if(SerFlag == 1 && RecPacket[1]==0x01 && RecPacket[2]==0x02){
@@ -190,6 +172,12 @@ void Reset_protocol(){
   receive_data4=0;
   receive_data5=0;
   receive_data6=0;
+  user_name1 = 0x10;
+  user_name2 = 0x10;
+  user_name3 = 0x10;
+  user_name4 = 0x10;
+  user_name5 = 0x10;
+  user_name6 = 0x10;
   etx=0;
   sum=0;
 }
@@ -244,9 +232,39 @@ void SendPacket_screen(){
 //M/B에서 LCD로 넘어오는 패킷 분석
 void PacketAnalyze(){
   if(RecPacket[0]==0x02&&RecPacket[1]==0x01&&
-      (RecPacket[2]==0x01||RecPacket[2]==0x02||RecPacket[2]==0x03||RecPacket[2]==0x05)&&
-      RecPacket[9]==0x03&&
-      RecPacket[10]==RecPacket[0]+RecPacket[1]+RecPacket[2]+RecPacket[3]+RecPacket[4]+RecPacket[5]+RecPacket[6]+RecPacket[7]+RecPacket[8]+RecPacket[9])
+      (RecPacket[2]==0x01||RecPacket[2]==0x03||RecPacket[2]==0x05||RecPacket[2]==0x06||RecPacket[2]==0x07)&&
+      RecPacket[9]==0x03 &&
+      RecPacket[10]==(RecPacket[0]+RecPacket[1]+RecPacket[2]+RecPacket[3]+RecPacket[4]+RecPacket[5]+RecPacket[6]+RecPacket[7]+RecPacket[8]+RecPacket[9])%256
+    )
+  {
+    stx = RecPacket[0];
+    addr = RecPacket[1];
+    cmd = RecPacket[2];
+    receive_data1 = RecPacket[3];
+    receive_data2 = RecPacket[4];
+    receive_data3 = RecPacket[5];
+    receive_data4 = RecPacket[6];
+    receive_data5 = RecPacket[7];
+    receive_data6 = RecPacket[8];
+    etx = RecPacket[9];
+    sum = RecPacket[10];
+  }
+  else if((RecPacket[0]==0x02)&&(RecPacket[1]==0x01)&&
+      (RecPacket[2]==0x02)&&
+      (RecPacket[9]==0x03)&&
+      (RecPacket[10]==(RecPacket[0]+RecPacket[1]+RecPacket[2]+RecPacket[3]+RecPacket[4]+RecPacket[5]+RecPacket[6]+RecPacket[7]+RecPacket[8]+RecPacket[9])%256)&&
+      (RecPacket[3] == 20) &&
+      (RecPacket[4] >= 23) &&
+      (RecPacket[4] < 73) &&
+      (RecPacket[5] >= 1) &&
+      (RecPacket[5] <= 12) &&
+      (RecPacket[6] >= 1) &&
+      (RecPacket[6] <= 31) &&
+      (RecPacket[7] >= 0) &&
+      (RecPacket[7] <= 23) &&
+      (RecPacket[8] >= 0) &&
+      (RecPacket[8] <= 59)
+    )
   {
     stx = RecPacket[0];
     addr = RecPacket[1];
@@ -259,7 +277,7 @@ void PacketAnalyze(){
     receive_data6 = RecPacket[8];    
     etx = RecPacket[9];
     sum = RecPacket[10];
-  } 
+  }
   else{
     Reset_protocol();
     return;
@@ -283,8 +301,23 @@ void Screen1_1(){
   Lcd_init();  
   lcd.setCursor(5,0); //(커서 위치, 줄 위치)
   lcd.print("Welcome to");
+  
+  //마곡점
+  //lcd.setCursor(2,1);
+  //lcd.print("StorHub Korea MG");
+  
+  //선릉점
   lcd.setCursor(2,1);
-  lcd.print("StorHub Korea MG");
+  lcd.print("StorHub Korea SL");
+  
+  //논현점
+  //lcd.setCursor(2,1);
+  //lcd.print("StorHub Korea NH");
+  
+  //논현 와인뱅크
+  //lcd.setCursor(1,1);
+  //lcd.print("Winebanc Nonhyeon");
+    
   lcd.setCursor(3,2);
   lcd.print("Use Mobile Web");
   lcd.setCursor(5,3);
@@ -301,18 +334,45 @@ void Screen1_2(){
   lcd.print(current_behind_year, DEC);  //2100년 일 경우, 00이 제대로 출력되는 지 확인 필요.
   lcd.setCursor(14,0);
   lcd.print("/");
-  lcd.setCursor(15,0);
+  
+  if(current_month<10){
+    lcd.setCursor(16,0);
+  }
+  else{
+    lcd.setCursor(15,0);
+  }
   lcd.print(current_month, DEC);
+  
   lcd.setCursor(17,0);
   lcd.print("/");
-  lcd.setCursor(18,0);
+
+  if(current_day<10){
+    lcd.setCursor(19,0);
+  }
+  else{
+    lcd.setCursor(18,0);
+  }
   lcd.print(current_day, DEC);
-  lcd.setCursor(6,1);
+
+  if(current_hour<10){
+    lcd.setCursor(7,1);
+  }
+  else{
+    lcd.setCursor(6,1);
+  }
   lcd.print(current_hour, DEC);
+  
   lcd.setCursor(8,1);
   lcd.print(":");
-  lcd.setCursor(9,1);
+
+  if(current_minute<10){
+    lcd.setCursor(10,1);
+  }
+  else{
+    lcd.setCursor(9,1);
+  }
   lcd.print(current_minute, DEC);
+
   lcd.setCursor(12,1);
   lcd.print(ampm);
   lcd.setCursor(3,2);
@@ -354,13 +414,32 @@ void Screen3(){
 void Screen4(){
   Lcd_init();
   lcd.setCursor(0,0);
-  lcd.print("Welcome, Guest");
+  //lcd.print("Welcome, Guest");
+  lcd.print("Welcome, ");
+  //'Guest' 대신 '사용자 영문 이름' 또는'사용자 휴대전화 뒷번호 4자리'로 소프트웨어로 부터 받을 예정  
   lcd.setCursor(0,1);
   lcd.print("Entry is Granted");
   lcd.setCursor(0,2);
   lcd.print("Have a");
   lcd.setCursor(0,3);
   lcd.print("Nice Day!");
+  ScreenFlag = 4;
+}
+
+void Screen4_2(){
+  //아래 함수에서 위치를 제대로 못잡고 ex)lcd.setCursor(9,0);, 엉뚱한 출력됨
+  if(cmd==(byte)0x06){
+    lcd.setCursor(9,0);
+  }
+  else if(cmd==(byte)0x07){
+    lcd.setCursor(15,0);
+  }
+  lcd.print(user_name1);
+  lcd.print(user_name2);
+  lcd.print(user_name3);
+  lcd.print(user_name4);
+  lcd.print(user_name5);
+  lcd.print(user_name6);
   ScreenFlag = 4;
 }
 
@@ -380,7 +459,7 @@ void Screen5(){
 
 //화면6
 void Screen6(){
-  Lcd_init();  
+  Lcd_init();
   ScreenFlag = 6;
 }
 
@@ -402,9 +481,9 @@ void Dayofweek()
     if ( current_month < 3 )
     {
         current_behind_year -= 1;
-    }
+    }      
     int calc = (current_behind_year + current_behind_year/4 - current_behind_year/100 + current_behind_year/400 + t[current_month-1] + current_day) % 7;
-    
+
     switch(calc){
     case 0 :
       dayofweek = "SUNDAY";
@@ -427,21 +506,20 @@ void Dayofweek()
     case 6 :
       dayofweek = "SATURDAY";
       break;
-  }
+    }
 }
 
 void Ampm(){
-  if(current_hour > 12){
+  if(13 <= current_hour){
     current_hour -= 12;
-    ampm = "pm";
+    ampm = "PM";
   }
-  else{
-    ampm = "am";
+  else if(current_hour <= 11){
+    if(current_hour == 0){
+      current_hour += 12;
+    }
+    ampm = "AM";
   }
-}
-
-void Switchcheck() {
-  switch1 = digitalRead(2);
 }
 
 void setup() {
@@ -455,24 +533,11 @@ void setup() {
   Screen1_1();
 
   Serial.begin(9600);
-
-  MsTimer2::set(50, Switchcheck); //20ms마다 스위치 상태 측정하겠다.
-  MsTimer2::start();
-
-  pinMode(2, INPUT_PULLUP); //눌리지 않은 상태(기본 상태)에서 '1', 눌린 상태에서 '0' 출력
+  
   wait_1(20);
 }
 
-void loop() {
-  //스위치 상태 응답
-  if(switch1 == 0 && switch_cnt == 0){
-    SendPacket_switch();
-    switch_cnt += 1;
-  }
-  else if(switch1 == 1 && switch_cnt == 1){
-    switch_cnt -= 1;
-  }
-  
+void loop() {  
   if(SerFlag==0){
     RecievePacket();
     wait_1(3000);
@@ -573,6 +638,8 @@ void loop() {
           break;
       }
       lcd.print(receive_data1-16, DEC);
+      //아래의 코드는 Ver 3
+      //lcd.print("*");
       
       Reset_protocol();
     }
@@ -613,10 +680,7 @@ void loop() {
       receive_data5==(byte)0x00 &&
       receive_data6==(byte)0x00
       ){
-      Screen4();
-      Reset_protocol();
-      wait_2(5000);
-      Screen1_1();
+      Screen4();      
       Reset_protocol();
     }
     else if(ScreenFlag==3 && addr==(byte)0x01 && cmd==(byte)0x03 &&
@@ -646,6 +710,36 @@ void loop() {
       Reset_protocol();
     }
 
+    //사용자 이름 또는 사용자 휴대전화 뒷번호 4자리 전송(1)
+    if(ScreenFlag==4 && addr==(byte)0x01 && cmd==(byte)0x06){
+      user_name1 = receive_data1;
+      user_name2 = receive_data2;
+      user_name3 = receive_data3;
+      user_name4 = receive_data4;
+      user_name5 = receive_data5;
+      user_name6 = receive_data6;
+      
+      Screen4_2();
+      check_process = 1;
+      Reset_protocol();
+    }
+    
+    //사용자 이름 또는 사용자 휴대전화 뒷번호 4자리 전송(2)
+    if(ScreenFlag==4 && addr==(byte)0x01 && cmd==(byte)0x07 && check_process==1){
+      user_name1 = receive_data1;
+      user_name2 = receive_data2;
+      user_name3 = receive_data3;
+      user_name4 = receive_data4;
+      user_name5 = receive_data5;
+      user_name6 = receive_data6;
+      
+      Screen4_2();
+      wait_2(5000);
+      Screen1_1();
+      check_process = 0;
+      Reset_protocol();
+    }    
+
     //날짜, 시간, 요일 업데이트
     if(addr==(byte)0x01 && cmd==(byte)0x02){
       current_front_year = receive_data1;
@@ -654,6 +748,7 @@ void loop() {
       current_day = receive_data4;
       current_hour = receive_data5;
       current_minute = receive_data6;
+      
       Dayofweek();
       Ampm();
       Reset_protocol();
