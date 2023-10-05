@@ -13,3 +13,6 @@ Ver.7 Update
 
 Ver.10 Update
  - SUM 값에 % 256 하여 1BYTE로 표시
+
+Ver.13 Update
+ - 프로토콜 변경

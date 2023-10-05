@@ -2,7 +2,7 @@
   Project Name : Storhub_Access_control_system
   Subtitle : Storhub
   Reporting date : 22.11.08
-  Update date : 23.09.06
+  Update date : 23.10.04
   written by Smartcube HW Staff 'HEONSEOK HA'
 */
 
@@ -25,13 +25,6 @@ LiquidCrystal_I2C lcd(0x27,20,4);
  * GND to GND
 */
 
-/*
- * Arduino NANO to 자기 호출 버튼(납땜)
- * GND  to  COM
- * D2   to  NO
- */
-
-
 //현재 날짜, 시간, 요일, ampm  변수(데이터 업데이트 전 임의의 값 출력)
 byte current_front_year=0x14, current_behind_year=0x16, current_month=0x0A, current_day=0x0B, current_hour=0x11, current_minute=0x2C;
 String dayofweek, ampm;
@@ -48,114 +41,17 @@ byte RecPacket[11]={0, }, SenPacket_switch[11]={0, }, SenPacket_screen[11]={0, }
  * 화면1-2 : 1
  * 화면2 : 2
  * 화면3 : 3
- * 화면4 : 4
+ * 화면4-1 : 4
  * 화면4-2 : 4
  * 화면5 : 5
  * 화면6 : 6
  */
 
-int key=0, SerFlag=0, ScreenFlag = 0, pwlength = 0, check_process = 0;
+int key=0, SerFlag=0, ScreenFlag = 0, pwlength = 0;
 
 //프로토콜 변수
 byte stx, addr, cmd, receive_data1, receive_data2, receive_data3, receive_data4, receive_data5, receive_data6, send_data1, send_data2, send_data3, send_data4, send_data5, send_data6, etx, sum;
-
-/*
-     * wait 시, 
-     * 1) 초기화면에서만 사용자의 번호 키 입력 받아 wait에서 깨어남.
-     * 2) 현재 날짜, 시간 전송 받으면 값만 처리하고, wait에서는 깨어나지 않음.
-     * 3) 비밀번호 검증 결과 받는 것은 wait 시가 아니므로 해당 안됨.
-     * 4) LCD에서 현재 어떤 화면인지를 물어보는 요청은 wait에서 깨어나지 않음.
-     * 
-     * wait_1 : 초기화면 시, 사용
-     * wait_2 : 초기화면이 아닐 때, 사용
-*/
 char user_name1, user_name2, user_name3, user_name4, user_name5, user_name6;
-
-void wait_1(unsigned long duration_ms)
-{
-  unsigned long time_start = millis();
-  unsigned long time_end = time_start;
-  bool is_complete = false;
-  while (!is_complete)
-  {
-    RecievePacket();    
-    if(SerFlag == 1){
-      break;
-    }
-    
-    unsigned long time_current = millis();
-
-    if (time_current - time_start >= duration_ms)
-    {
-      time_end = millis();
-      is_complete = true;
-    }
-  }
-}
-
-void wait_2(unsigned long duration_ms)
-{
-  unsigned long time_start = millis();
-  unsigned long time_end = time_start;
-  bool is_complete = false;
-  while (!is_complete)
-  {    
-    RecievePacket();
-    
-    if(SerFlag == 1 && RecPacket[1]==0x01 && RecPacket[2]==0x02){
-      current_front_year = RecPacket[3];
-      current_behind_year = RecPacket[4];
-      current_month = RecPacket[5];
-      current_day = RecPacket[6];
-      current_hour = RecPacket[7];
-      current_minute = RecPacket[8];
-      Dayofweek();
-      Ampm();
-      Reset_protocol();
-    }
-    else if(SerFlag == 1 && RecPacket[1]==0x01 && RecPacket[2]==0x05 &&
-      RecPacket[3]==0x00 &&
-      RecPacket[4]==0x00 &&
-      RecPacket[5]==0x00 &&
-      RecPacket[6]==0x00 &&
-      RecPacket[7]==0x00 &&
-      RecPacket[8]==0x00){
-      switch(ScreenFlag){
-        case 0 :
-          SenPacket_screen[3] = 0x10;
-          break;
-        case 1 :
-          SenPacket_screen[3] = 0x11;
-          break;
-        case 2 :
-          SenPacket_screen[3] = 0x12;
-          break;
-        case 3 :
-          SenPacket_screen[3] = 0x13;
-          break;
-        case 4 :
-          SenPacket_screen[3] = 0x14;
-          break;
-        case 5 :
-          SenPacket_screen[3] = 0x15;
-          break;
-        case 6 :
-          SenPacket_screen[3] = 0x16;
-          break;
-      }
-      SendPacket_screen();
-      Reset_protocol();
-    }
-    
-    unsigned long time_current = millis();
-
-    if (time_current - time_start >= duration_ms)
-    {
-      time_end = millis();
-      is_complete = true;
-    }
-  }
-}
 
 void Reset_protocol(){
   for(int i=0; i<11; i++){
@@ -198,41 +94,10 @@ void RecievePacket(){
   }
 }
 
-//호출(스위치) 버튼 눌림 시, 패킷 전송
-void SendPacket_switch(){
-  SenPacket_switch[0] = 0x02;
-  SenPacket_switch[1] = 0x02;
-  SenPacket_switch[2] = 0x04;
-  SenPacket_switch[3] = 0x00;
-  SenPacket_switch[4] = 0x00;
-  SenPacket_switch[5] = 0x00;
-  SenPacket_switch[6] = 0x00;
-  SenPacket_switch[7] = 0x00;
-  SenPacket_switch[8] = 0x00;
-  SenPacket_switch[9] = 0x03;
-  SenPacket_switch[10] = 0x02+0x02+0x04+0x03;
-  Serial.write(SenPacket_switch, 11);
-}
-
-//현재 화면 패킷 전송
-void SendPacket_screen(){
-  SenPacket_screen[0] = 0x02;
-  SenPacket_screen[1] = 0x02;
-  SenPacket_screen[2] = 0x05;
-  SenPacket_screen[4] = 0x00;
-  SenPacket_screen[5] = 0x00;
-  SenPacket_screen[6] = 0x00;
-  SenPacket_screen[7] = 0x00;
-  SenPacket_screen[8] = 0x00;
-  SenPacket_screen[9] = 0x03;
-  SenPacket_screen[10] = 0x02+0x02+0x05+SenPacket_screen[3]+0x03;
-  Serial.write(SenPacket_screen, 11);
-}
-
 //M/B에서 LCD로 넘어오는 패킷 분석
 void PacketAnalyze(){
   if(RecPacket[0]==0x02&&RecPacket[1]==0x01&&
-      (RecPacket[2]==0x01||RecPacket[2]==0x03||RecPacket[2]==0x05||RecPacket[2]==0x06||RecPacket[2]==0x07)&&
+      (RecPacket[2]==0x01||RecPacket[2]==0x03||RecPacket[2]==0x04||RecPacket[2]==0x05)&&
       RecPacket[9]==0x03 &&
       RecPacket[10]==(RecPacket[0]+RecPacket[1]+RecPacket[2]+RecPacket[3]+RecPacket[4]+RecPacket[5]+RecPacket[6]+RecPacket[7]+RecPacket[8]+RecPacket[9])%256
     )
@@ -411,7 +276,7 @@ void Screen3(){
 }
 
 //화면4
-void Screen4(){
+void Screen4_1(){
   Lcd_init();
   lcd.setCursor(0,0);
   //lcd.print("Welcome, Guest");
@@ -428,10 +293,10 @@ void Screen4(){
 
 void Screen4_2(){
   //아래 함수에서 위치를 제대로 못잡고 ex)lcd.setCursor(9,0);, 엉뚱한 출력됨
-  if(cmd==(byte)0x06){
+  if(cmd==(byte)0x04){
     lcd.setCursor(9,0);
   }
-  else if(cmd==(byte)0x07){
+  else if(cmd==(byte)0x05){
     lcd.setCursor(15,0);
   }
   lcd.print(user_name1);
@@ -534,32 +399,42 @@ void setup() {
 
   Serial.begin(9600);
   
-  wait_1(20);
+  delay(20);
 }
 
 void loop() {  
   if(SerFlag==0){
     RecievePacket();
-    wait_1(3000);
-
-    //위의 wait(3000) 함수에서 SerFlag 값이 '1'로 바뀌면 Change_Screen1() 함수를 실행하지 않게 하는 조건문
-    if(SerFlag==0){
-      Change_Screen1();
-    }
   }
   else{
     PacketAnalyze();
     
-    //Screen1_1 또는 Screen1_2 에서 사용자가 '*' 입력하면, Screen2로 이동
-    if((ScreenFlag==0 || ScreenFlag==1) && addr==(byte)0x01 && cmd==(byte)0x01 &&
-        receive_data1==(byte)0x1A &&
-        receive_data2==(byte)0x00 &&
-        receive_data3==(byte)0x00 &&
-        receive_data4==(byte)0x00 &&
-        receive_data5==(byte)0x00 &&
-        receive_data6==(byte)0x00){
-      Screen2();
-      Reset_protocol();
+    //Screen Change
+    if(addr==(byte)0x01 && cmd==(byte)0x03){
+      switch(receive_data1){
+        case (byte)0x10 :
+          Screen1_1();
+          break;
+        case (byte)0x11 :
+          Screen1_2();
+          break;
+        case (byte)0x12 :
+          Screen2();
+          break;
+        case (byte)0x13 :
+          pwlength = 0;
+          Screen3();
+          break;
+        case (byte)0x14 :
+          Screen4_1();
+          break;
+        case (byte)0x15 :
+          Screen5();
+          break;
+        case (byte)0x16 :
+          Screen6();
+          break;
+      }
     }
     
     //Screen2 에서 사용자가 '#' 버튼 입력하면, Screen1로 이동
@@ -571,9 +446,6 @@ void loop() {
       receive_data5==(byte)0x00 &&
       receive_data6==(byte)0x00){    
       switch(pwlength){
-        case 0 :
-          Screen1_1();
-          break;
         case 1 :
           lcd.setCursor(4,2);
           lcd.print("_");
@@ -603,7 +475,6 @@ void loop() {
       if(pwlength != 0){
         pwlength -= 1;
       }
-      Reset_protocol();
     }
 
     //Screen2 에서 사용자가 비밀번호 입력하면, LCD에 표시
@@ -613,105 +484,37 @@ void loop() {
       receive_data3==(byte)0x00 &&
       receive_data4==(byte)0x00 &&
       receive_data5==(byte)0x00 &&
-      receive_data6==(byte)0x00 &&
-      pwlength < 6){
-      pwlength += 1;
-      
-      switch(pwlength){
-        case 1 :
-          lcd.setCursor(4,2);
-          break;
-        case 2 :
-          lcd.setCursor(6,2);
-          break;
-        case 3 :
-          lcd.setCursor(8,2);
-          break;
-        case 4 :
-          lcd.setCursor(10,2);
-          break;
-        case 5 :
-          lcd.setCursor(12,2);
-          break;
-        case 6 :
-          lcd.setCursor(14,2);
-          break;
+      receive_data6==(byte)0x00){
+      if(pwlength < 6){
+        pwlength += 1;      
+        switch(pwlength){
+          case 1 :
+            lcd.setCursor(4,2);
+            break;
+          case 2 :
+            lcd.setCursor(6,2);
+            break;
+          case 3 :
+            lcd.setCursor(8,2);
+            break;
+          case 4 :
+            lcd.setCursor(10,2);
+            break;
+          case 5 :
+            lcd.setCursor(12,2);
+            break;
+          case 6 :
+            lcd.setCursor(14,2);
+            break;
+        }
+        lcd.print(receive_data1-16, DEC);
+        //아래의 코드는 Ver 3
+        //lcd.print("*");        
       }
-      lcd.print(receive_data1-16, DEC);
-      //아래의 코드는 Ver 3
-      //lcd.print("*");
-      
-      Reset_protocol();
-    }
-
-    //Screen2에서 사용자가 비밀번호 입력 후 '*' 버튼을 눌렀을 때, Screen3로 이동
-    if(ScreenFlag==2 && addr==(byte)0x01 && cmd==(byte)0x01 &&
-      receive_data1==(byte)0x1A &&
-      receive_data2==(byte)0x00 &&
-      receive_data3==(byte)0x00 &&
-      receive_data4==(byte)0x00 &&
-      receive_data5==(byte)0x00 &&
-      receive_data6==(byte)0x00
-      ){
-      pwlength = 0;
-      Screen3();
-      Reset_protocol();
-    }
-
-    //Screen3에서 사용자가 '#' 버튼을 눌렀을 때, Screen1로 이동
-    if(ScreenFlag==3 && addr==(byte)0x01 && cmd==(byte)0x01 &&
-      receive_data1==(byte)0x1B &&
-      receive_data2==(byte)0x00 &&
-      receive_data3==(byte)0x00 &&
-      receive_data4==(byte)0x00 &&
-      receive_data5==(byte)0x00 &&
-      receive_data6==(byte)0x00
-      ){
-      Screen1_1();
-      Reset_protocol();
-    }
-    
-    //Screen3에서 비밀번호 검증 결과를 받았을 때, 결과에 따라 Screen4 또는 Screen5로 이동
-    if(ScreenFlag==3 && addr==(byte)0x01 && cmd==(byte)0x03 &&
-      receive_data1==(byte)0x10 &&
-      receive_data2==(byte)0x00 &&
-      receive_data3==(byte)0x00 &&
-      receive_data4==(byte)0x00 &&
-      receive_data5==(byte)0x00 &&
-      receive_data6==(byte)0x00
-      ){
-      Screen4();      
-      Reset_protocol();
-    }
-    else if(ScreenFlag==3 && addr==(byte)0x01 && cmd==(byte)0x03 &&
-      receive_data1==(byte)0x11 &&
-      receive_data2==(byte)0x00 &&
-      receive_data3==(byte)0x00 &&
-      receive_data4==(byte)0x00 &&
-      receive_data5==(byte)0x00 &&
-      receive_data6==(byte)0x00
-      ){
-      Screen5();
-      Reset_protocol();
-      wait_2(2000);
-      Screen6();
-      Reset_protocol();
-      wait_2(100);
-      
-      for(int i = 0 ; i < 3 ; i++){
-        Screen5();
-        Reset_protocol();
-        wait_2(1200);
-        Screen6();
-        Reset_protocol();
-        wait_2(100);
-      }
-      Screen1_1();
-      Reset_protocol();
     }
 
     //사용자 이름 또는 사용자 휴대전화 뒷번호 4자리 전송(1)
-    if(ScreenFlag==4 && addr==(byte)0x01 && cmd==(byte)0x06){
+    if(ScreenFlag==4 && addr==(byte)0x01 && cmd==(byte)0x04){
       user_name1 = receive_data1;
       user_name2 = receive_data2;
       user_name3 = receive_data3;
@@ -720,12 +523,10 @@ void loop() {
       user_name6 = receive_data6;
       
       Screen4_2();
-      check_process = 1;
-      Reset_protocol();
     }
     
     //사용자 이름 또는 사용자 휴대전화 뒷번호 4자리 전송(2)
-    if(ScreenFlag==4 && addr==(byte)0x01 && cmd==(byte)0x07 && check_process==1){
+    if(ScreenFlag==4 && addr==(byte)0x01 && cmd==(byte)0x05){
       user_name1 = receive_data1;
       user_name2 = receive_data2;
       user_name3 = receive_data3;
@@ -734,10 +535,6 @@ void loop() {
       user_name6 = receive_data6;
       
       Screen4_2();
-      wait_2(5000);
-      Screen1_1();
-      check_process = 0;
-      Reset_protocol();
     }    
 
     //날짜, 시간, 요일 업데이트
@@ -751,43 +548,7 @@ void loop() {
       
       Dayofweek();
       Ampm();
-      Reset_protocol();
     }
-
-    //현재 LCD 화면에 대한 요청 및 응답
-    if(addr==(byte)0x01 && cmd==(byte)0x05 &&
-      receive_data1==(byte)0x00 &&
-      receive_data2==(byte)0x00 &&
-      receive_data3==(byte)0x00 &&
-      receive_data4==(byte)0x00 &&
-      receive_data5==(byte)0x00 &&
-      receive_data6==(byte)0x00
-      ){
-      switch(ScreenFlag){
-        case 0 :
-          SenPacket_screen[3] = 0x10;
-          break;
-        case 1 :
-          SenPacket_screen[3] = 0x11;
-          break;
-        case 2 :
-          SenPacket_screen[3] = 0x12;
-          break;
-        case 3 :
-          SenPacket_screen[3] = 0x13;
-          break;
-        case 4 :
-          SenPacket_screen[3] = 0x14;
-          break;
-        case 5 :
-          SenPacket_screen[3] = 0x15;
-          break;
-        case 6 :
-          SenPacket_screen[3] = 0x16;
-          break;
-      }
-      SendPacket_screen();
-    }    
     Reset_protocol();
   }
 }
